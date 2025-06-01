@@ -2,34 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard</title>
+  <title>Library Dashboard</title>
   <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <div class="dashboard-container">
     <h1>Welcome, <%= username %>!</h1>
-    <p>You have borrowed <%= booksBorrowed %> book(s).</p>
+    <p>You have borrowed <span class="badge"><%= booksBorrowed %></span> book(s).</p>
 
     <% if (booksBorrowed > 0) { %>
+      <input type="text" id="bookSearch" placeholder="Search books..." class="search-input" />
       <h3>Borrowed Books:</h3>
       <ul>
         <% borrowedBooks.forEach(book => { %>
-          <li>
+          <li class="borrowed-book-item">
             <%= book.title %>
+            <% if (book.dueDate) { %>
+              (Due: <%= new Date(book.dueDate).toDateString() %>)
+            <% } %>
             <form action="/return" method="POST" style="display:inline;">
               <input type="hidden" name="bookId" value="<%= book.id %>" />
-              <button type="submit" class="btn-return">Return</button>
+              <button type="submit" class="btn-return"><i class="fas fa-undo"></i> Return</button>
             </form>
           </li>
         <% }) %>
       </ul>
-      <p>Books must be returned by: <%= booksOverdue.toDateString() %></p>
     <% } else { %>
       <p>You have no borrowed books.</p>
     <% } %>
 
-    <a href="/borrow" class="btn">Borrow More Books</a>
-    <a href="/logout" class="btn logout-btn">Logout</a>
+    <a href="/borrow" class="btn"><i class="fas fa-book"></i> Borrow Books</a>
+    <a href="/logout" class="btn logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </div>
+
+  <script>
+    document.getElementById("bookSearch").addEventListener("input", function () {
+      const filter = this.value.toLowerCase();
+      const items = document.querySelectorAll(".borrowed-book-item");
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(filter) ? "list-item" : "none";
+      });
+    });
+  </script>
 </body>
 </html>

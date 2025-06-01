@@ -146,3 +146,38 @@ select {
   border-radius: 5px;
   border: 1px solid #ddd;
 }
+.avatar {
+  width: 60px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.badge {
+  background-color: #3f51b5;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.search-input {
+  width: 80%;
+  padding: 10px;
+  margin: 20px auto;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .btn, .search-input {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
