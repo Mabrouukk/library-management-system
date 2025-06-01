@@ -115,6 +115,7 @@ app.get('/dashboard', (req, res) => {
 app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
 });
+
 app.get('/borrow', (req, res) => {
   if (!req.session.user) return res.redirect('/');
   res.render('borrow', {
@@ -150,6 +151,7 @@ app.post('/register', (req, res) => {
 });
 
 // Borrow book
+// ...existing code...
 app.post('/borrow', (req, res) => {
   if (!req.session.user) return res.redirect('/');
   const bookId = parseInt(req.body.bookId);
@@ -157,12 +159,15 @@ app.post('/borrow', (req, res) => {
   if (book) {
     req.session.borrowedBooks = req.session.borrowedBooks || [];
     if (!req.session.borrowedBooks.some(b => b.id === bookId)) {
-      req.session.borrowedBooks.push(book);
+      // Add dueDate property (7 days from now)
+      const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      req.session.borrowedBooks.push({ ...book, dueDate });
       req.session.borrowed = (req.session.borrowed || 0) + 1;
     }
   }
   res.redirect('/dashboard');
 });
+// ...existing code...
 
 // Return book
 app.post('/return', (req, res) => {
