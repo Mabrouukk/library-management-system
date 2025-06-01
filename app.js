@@ -20,8 +20,8 @@ app.use(session({
 // Mock data
 const USER = [
   { username: 'admin', password: '1234' },
-  { username: 'Mahmoud', password: '1234' }
-  { username: 'Marina', password: 'Marina1234' },
+  { username: 'Mahmoud', password: '1234' }, // <-- Add comma here
+  { username: 'Marina', password: 'Marina1234' }
 ];
 
 const BOOKS = [
