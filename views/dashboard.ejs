@@ -11,7 +11,7 @@
     <h1>Welcome, <%= username %>!</h1>
     <p>You have borrowed <span class="badge"><%= booksBorrowed %></span> book(s).</p>
 
-    <% if (booksBorrowed > 0) { %>
+    <% if (booksBorrowed >= 0) { %>
       <input type="text" id="bookSearch" placeholder="Search books..." class="search-input" />
       <h3>Borrowed Books:</h3>
       <ul>
