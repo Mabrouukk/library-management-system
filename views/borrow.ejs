@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Borrow Books</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="borrow-container">
+    <h1>Borrow Books</h1>
+    <p>You have borrowed <%= booksBorrowed || 0 %> books so far.</p>
+
+    <form action="/borrow" method="POST">
+      <select name="bookId" required>
+        <option value="" disabled selected>Select a book to borrow</option>
+        <% books.forEach(book => { %>
+          <option value="<%= book.id %>"><%= book.title %></option>
+        <% }) %>
+      </select>
+      <button type="submit" class="btn">Borrow</button>
+    </form>
+
+    <a href="/dashboard" class="btn">Back to Dashboard</a>
+    <a href="/logout" class="btn logout-btn">Logout</a>
+  </div>
+</body>
+</html>

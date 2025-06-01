@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>Welcome, <%= username %>!</h1>
+    <p>You have borrowed <%= booksBorrowed %> book(s).</p>
+
+    <% if (booksBorrowed > 0) { %>
+      <h3>Borrowed Books:</h3>
+      <ul>
+        <% borrowedBooks.forEach(book => { %>
+          <li>
+            <%= book.title %>
+            <form action="/return" method="POST" style="display:inline;">
+              <input type="hidden" name="bookId" value="<%= book.id %>" />
+              <button type="submit" class="btn-return">Return</button>
+            </form>
+          </li>
+        <% }) %>
+      </ul>
+      <p>Books must be returned by: <%= booksOverdue.toDateString() %></p>
+    <% } else { %>
+      <p>You have no borrowed books.</p>
+    <% } %>
+
+    <a href="/borrow" class="btn">Borrow More Books</a>
+    <a href="/logout" class="btn logout-btn">Logout</a>
+  </div>
+</body>
+</html>
