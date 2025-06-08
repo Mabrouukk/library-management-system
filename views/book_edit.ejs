@@ -2,7 +2,7 @@
 <html>
 <head>
   <link rel="stylesheet" href="/css/style.css">
-  <title>Borrow Book</title>
+  <title>Edit Book</title>
 </head>
 <body>
   <nav class="navbar">
@@ -16,19 +16,15 @@
     </ul>
   </nav>
   <div class="container">
-    <h2>Borrow Book</h2>
+    <h2>Edit Book</h2>
     <% if (error) { %><div class="error"><%= error %></div><% } %>
-    <p>You have borrowed <span class="badge"><%= borrowedCount %></span> of <span class="badge"><%= maxBorrow %></span> allowed books.</p>
-    <form method="POST" action="/borrow">
-      <select name="bookId" required>
-        <option value="">Select a book</option>
-        <% books.forEach(book => { %>
-          <option value="<%= book.id %>"><%= book.title %> by <%= book.author %></option>
-        <% }) %>
-      </select>
-      <button>Borrow</button>
+    <form method="POST" action="/books/edit/<%= book.id %>">
+      <input name="title" value="<%= book.title %>" required>
+      <input name="author" value="<%= book.author %>" required>
+      <input name="genre" value="<%= book.genre %>" required>
+      <button>Save</button>
     </form>
-    <a href="/dashboard">Back</a>
+    <a href="/books">Back</a>
   </div>
 </body>
 </html>

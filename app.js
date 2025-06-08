@@ -1,187 +1,254 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const bcrypt = require('bcrypt');
 
 const app = express();
+const SALT_ROUNDS = 10;
+const MAX_BORROW = 5;
 
-
-// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 
-// Session setup
 app.use(session({
   secret: 'secret-key',
   resave: false,
   saveUninitialized: true
 }));
 
-// Mock data
-const USER = [
-  { username: 'admin', password: '1234' },
-  { username: 'Mahmoud', password: '1234' }, //
-  { username: 'Marina', password: 'Marina1234' }
+// --- DATA STRUCTURES ---
+
+let USERS = [
+  // Sample admin user
+  { username: 'Mahmoud', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: true, history: [], borrowedBooks: [] },
+  // Regular users
+  { username: 'Marina', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] },
+  { username: 'Sham', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] },
+  { username: 'Adel', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] }
 ];
 
-const BOOKS = [
-  { id: 1, title: "Clean Code" },
-  { id: 2, title: "The Pragmatic Programmer" },
-  { id: 3, title: "Introduction to Algorithms" },
-  { id: 4, title: "Design Patterns" },
-  { id: 5, title: "Refactoring" },
-  { id: 6, title: "You Don't Know JS" },
-  { id: 7, title: "JavaScript: The Good Parts" },
-  { id: 8, title: "Eloquent JavaScript" },
-  { id: 9, title: "Cracking the Coding Interview" },
-  { id: 10, title: "Head First Design Patterns" },
-  { id: 11, title: "Effective Java" },
-  { id: 12, title: "The Art of Computer Programming" },
-  { id: 13, title: "Code Complete" },
-  { id: 14, title: "Structure and Interpretation of Computer Programs" },
-  { id: 15, title: "Algorithms Unlocked" },
-  { id: 16, title: "Python Crash Course" },
-  { id: 17, title: "Automate the Boring Stuff with Python" },
-  { id: 18, title: "Fluent Python" },
-  { id: 19, title: "Learning Python" },
-  { id: 20, title: "Grokking Algorithms" },
-  { id: 21, title: "The Mythical Man-Month" },
-  { id: 22, title: "Refactoring UI" },
-  { id: 23, title: "The Clean Coder" },
-  { id: 24, title: "Continuous Delivery" },
-  { id: 25, title: "Site Reliability Engineering" },
-  { id: 26, title: "The Phoenix Project" },
-  { id: 27, title: "The DevOps Handbook" },
-  { id: 28, title: "Soft Skills: The Software Developer's Life Manual" },
-  { id: 29, title: "Peopleware" },
-  { id: 30, title: "Working Effectively with Legacy Code" },
-  { id: 31, title: "Test-Driven Development: By Example" },
-  { id: 32, title: "Agile Software Development, Principles, Patterns, and Practices" },
-  { id: 33, title: "The Art of Agile Development" },
-  { id: 34, title: "Don't Make Me Think" },
-  { id: 35, title: "The Pragmatic Programmer: 20th Anniversary Edition" },
-  { id: 36, title: "Programming Pearls" },
-  { id: 37, title: "Introduction to the Theory of Computation" },
-  { id: 38, title: "Compilers: Principles, Techniques, and Tools" },
-  { id: 39, title: "Operating System Concepts" },
-  { id: 40, title: "Computer Networks" },
-  { id: 41, title: "Modern Operating Systems" },
-  { id: 42, title: "Artificial Intelligence: A Modern Approach" },
-  { id: 43, title: "Deep Learning" },
-  { id: 44, title: "Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow" },
-  { id: 45, title: "Data Science from Scratch" },
-  { id: 46, title: "The Data Warehouse Toolkit" },
-  { id: 47, title: "Database System Concepts" },
-  { id: 48, title: "SQL Antipatterns" },
-  { id: 49, title: "Learning SQL" },
-  { id: 50, title: "MongoDB: The Definitive Guide" },
-  { id: 51, title: "RESTful Web APIs" },
-  { id: 52, title: "Web Development with Node and Express" },
-  { id: 53, title: "Learning React" },
-  { id: 54, title: "Fullstack React" },
-  { id: 55, title: "Vue.js Up and Running" },
-  { id: 56, title: "Pro Git" },
-  { id: 57, title: "The Linux Command Line" },
-  { id: 58, title: "Docker Deep Dive" },
-  { id: 59, title: "Kubernetes Up & Running" },
-  { id: 60, title: "Clean Architecture" }
+let BOOKS = [
+  { id: 1, title: "Clean Code", author: "Robert C. Martin", genre: "Programming" },
+  { id: 2, title: "The Pragmatic Programmer", author: "Andrew Hunt", genre: "Programming" },
+  { id: 3, title: "Harry Potter", author: "J.K. Rowling", genre: "Fantasy" },
+  { id: 4, title: "The Hobbit", author: "J.R.R. Tolkien", genre: "Fantasy" },
+  { id: 5, title: "1984", author: "George Orwell", genre: "Dystopian" },
+  { id: 6, title: "To Kill a Mockingbird", author: "Harper Lee", genre: "Classic" },
+  { id: 7, title: "The Great Gatsby", author: "F. Scott Fitzgerald", genre: "Classic" },
+  { id: 8, title: "Moby Dick", author: "Herman Melville", genre: "Classic" },
+  { id: 9, title: "War and Peace", author: "Leo Tolstoy", genre: "Classic" },
+  { id: 10, title: "Pride and Prejudice", author: "Jane Austen", genre: "Classic" },
+  { id: 11, title: "The Catcher in the Rye", author: "J.D. Salinger", genre: "Classic" },
+  { id: 12, title: "Brave New World", author: "Aldous Huxley", genre: "Dystopian" },
+  { id: 13, title: "Animal Farm", author: "George Orwell", genre: "Dystopian" },
+  { id: 14, title: "The Lord of the Rings", author: "J.R.R. Tolkien", genre: "Fantasy" },
+  { id: 15, title: "Fahrenheit 451", author: "Ray Bradbury", genre: "Dystopian" },
+  { id: 16, title: "Jane Eyre", author: "Charlotte Brontë", genre: "Classic" },
+  { id: 17, title: "Wuthering Heights", author: "Emily Brontë", genre: "Classic" },
+  { id: 18, title: "The Alchemist", author: "Paulo Coelho", genre: "Adventure" },
+  { id: 19, title: "The Da Vinci Code", author: "Dan Brown", genre: "Thriller" },
+  { id: 20, title: "The Girl with the Dragon Tattoo", author: "Stieg Larsson", genre: "Thriller" },
+  { id: 21, title: "Gone Girl", author: "Gillian Flynn", genre: "Thriller" },
+  { id: 22, title: "The Shining", author: "Stephen King", genre: "Horror" },
+  { id: 23, title: "Dracula", author: "Bram Stoker", genre: "Horror" },
+  { id: 24, title: "Frankenstein", author: "Mary Shelley", genre: "Horror" },
+  { id: 25, title: "The Art of Computer Programming", author: "Donald Knuth", genre: "Programming" },
+  { id: 26, title: "You Don't Know JS", author: "Kyle Simpson", genre: "Programming" },
+  { id: 27, title: "Eloquent JavaScript", author: "Marijn Haverbeke", genre: "Programming" },
+  { id: 28, title: "Cracking the Coding Interview", author: "Gayle Laakmann McDowell", genre: "Programming" },
+  { id: 29, title: "Refactoring", author: "Martin Fowler", genre: "Programming" },
+  { id: 30, title: "Design Patterns", author: "Erich Gamma", genre: "Programming" }
 ];
+let nextBookId = 6;
 
-const today = new Date();
-const booksOverdue = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+// --- AUTH MIDDLEWARE ---
 
-// Routes
+function requireLogin(req, res, next) {
+  if (!req.session.user) return res.redirect('/login');
+  next();
+}
 
-// Login page
-app.get('/', (req, res) => res.render('login', { error: null }));
+function requireAdmin(req, res, next) {
+  if (!req.session.user) return res.redirect('/login');
+  const user = USERS.find(u => u.username === req.session.user);
+  if (!user || !user.isAdmin) return res.status(403).send('Admin only');
+  next();
+}
+
+// --- ROUTES ---
+
+// Home/Login/Register
+app.get('/', (req, res) => res.redirect('/dashboard'));
 app.get('/login', (req, res) => res.render('login', { error: null }));
-
-// Register page
 app.get('/register', (req, res) => res.render('register', { error: null }));
 
-// Dashboard
-app.get('/dashboard', (req, res) => {
-  if (!req.session.user) return res.redirect('/');
-  res.render('dashboard', {
-    username: req.session.user,
-    booksBorrowed: req.session.borrowed || 0,
-    booksOverdue,
-    borrowedBooks: req.session.borrowedBooks || [],
-    books: BOOKS
-  });
-});
-
-// Logout
-app.get('/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/'));
-});
-
-app.get('/borrow', (req, res) => {
-  if (!req.session.user) return res.redirect('/');
-  res.render('borrow', {
-  books: BOOKS,
-  borrowedBooks: req.session.borrowedBooks || [],
-  booksBorrowed: req.session.borrowed || 0
-});
-
+// Register handler
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+  if (USERS.find(u => u.username === username)) {
+    return res.render('register', { error: 'Username already taken' });
+  }
+  const hash = await bcrypt.hash(password, SALT_ROUNDS);
+  USERS.push({ username, password: hash, isAdmin: false, history: [], borrowedBooks: [] });
+  res.redirect('/login');
 });
 
 // Login handler
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = USER.find(u => u.username === username && u.password === password);
-  if (user) {
+  const user = USERS.find(u => u.username === username);
+  if (user && await bcrypt.compare(password, user.password)) {
     req.session.user = username;
-    req.session.borrowed = 0;
-    req.session.borrowedBooks = [];
     res.redirect('/dashboard');
   } else {
     res.render('login', { error: 'Invalid username or password' });
   }
 });
 
-// Register handler
-app.post('/register', (req, res) => {
-  const { username, password } = req.body;
-  if (USER.find(u => u.username === username)) {
-    return res.render('register', { error: 'Username already taken' });
-  }
-  USER.push({ username, password });
-  res.redirect('/');
+// Logout
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/login'));
 });
+
+// Dashboard
+app.get('/dashboard', requireLogin, (req, res) => {
+  const user = USERS.find(u => u.username === req.session.user);
+  res.render('dashboard', {
+    username: user.username,
+    isAdmin: user.isAdmin,
+    booksBorrowed: user.borrowedBooks.length,
+    borrowedBooks: user.borrowedBooks,
+    allBooks: BOOKS
+  });
+});
+
+// User Profile
+app.get('/profile', requireLogin, (req, res) => {
+  const user = USERS.find(u => u.username === req.session.user);
+  res.render('profile', { user, error: null, success: null });
+});
+
+// Edit Profile (change username)
+app.post('/profile/edit', requireLogin, (req, res) => {
+  const user = USERS.find(u => u.username === req.session.user);
+  const { newUsername } = req.body;
+  if (!newUsername || USERS.find(u => u.username === newUsername)) {
+    return res.render('profile', { user, error: 'Invalid or taken username', success: null });
+  }
+  user.username = newUsername;
+  req.session.user = newUsername;
+  res.render('profile', { user, error: null, success: 'Username updated!' });
+});
+
+// Change Password
+app.post('/profile/password', requireLogin, async (req, res) => {
+  const user = USERS.find(u => u.username === req.session.user);
+  const { oldPassword, newPassword } = req.body;
+  if (!await bcrypt.compare(oldPassword, user.password)) {
+    return res.render('profile', { user, error: 'Old password incorrect', success: null });
+  }
+  user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  res.render('profile', { user, error: null, success: 'Password changed!' });
+});
+
+// Delete Account
+app.post('/profile/delete', requireLogin, (req, res) => {
+  USERS = USERS.filter(u => u.username !== req.session.user);
+  req.session.destroy(() => res.redirect('/register'));
+});
+
+// --- BOOK INVENTORY MANAGEMENT (ADMIN) ---
+
+// List books with search/filter
+app.get('/books', requireLogin, (req, res) => {
+  let { q, genre, author } = req.query;
+  let filtered = BOOKS;
+  if (q) filtered = filtered.filter(b => b.title.toLowerCase().includes(q.toLowerCase()));
+  if (genre) filtered = filtered.filter(b => b.genre === genre);
+  if (author) filtered = filtered.filter(b => b.author.toLowerCase().includes(author.toLowerCase()));
+  // Get unique genres/authors for filter dropdowns
+  const genres = [...new Set(BOOKS.map(b => b.genre))];
+  const authors = [...new Set(BOOKS.map(b => b.author))];
+  res.render('books', { books: filtered, genres, authors, q: q || '', genre: genre || '', author: author || '', isAdmin: USERS.find(u => u.username === req.session.user).isAdmin });
+});
+
+// Add book (admin)
+app.get('/books/add', requireAdmin, (req, res) => res.render('book_add', { error: null }));
+app.post('/books/add', requireAdmin, (req, res) => {
+  const { title, author, genre } = req.body;
+  if (!title || !author || !genre) return res.render('book_add', { error: 'All fields required' });
+  BOOKS.push({ id: nextBookId++, title, author, genre });
+  res.redirect('/books');
+});
+
+// Edit book (admin)
+app.get('/books/edit/:id', requireAdmin, (req, res) => {
+  const book = BOOKS.find(b => b.id == req.params.id);
+  if (!book) return res.send('Book not found');
+  res.render('book_edit', { book, error: null });
+});
+app.post('/books/edit/:id', requireAdmin, (req, res) => {
+  const book = BOOKS.find(b => b.id == req.params.id);
+  const { title, author, genre } = req.body;
+  if (!title || !author || !genre) return res.render('book_edit', { book, error: 'All fields required' });
+  book.title = title; book.author = author; book.genre = genre;
+  res.redirect('/books');
+});
+
+// Delete book (admin)
+app.post('/books/delete/:id', requireAdmin, (req, res) => {
+  BOOKS = BOOKS.filter(b => b.id != req.params.id);
+  res.redirect('/books');
+});
+
+// --- BORROWING/RETURNING ---
 
 // Borrow book
-// ...existing code...
-app.post('/borrow', (req, res) => {
-  if (!req.session.user) return res.redirect('/');
+app.get('/borrow', requireLogin, (req, res) => {
+  const user = USERS.find(u => u.username === req.session.user);
+  // Only show books not already borrowed
+  const availableBooks = BOOKS.filter(b => !user.borrowedBooks.some(bb => bb.id === b.id));
+  res.render('borrow', { books: availableBooks, borrowedCount: user.borrowedBooks.length, maxBorrow: MAX_BORROW, error: null });
+});
+
+app.post('/borrow', requireLogin, (req, res) => {
+  const user = USERS.find(u => u.username === req.session.user);
   const bookId = parseInt(req.body.bookId);
+  if (user.borrowedBooks.length >= MAX_BORROW) {
+    return res.render('borrow', { books: BOOKS.filter(b => !user.borrowedBooks.some(bb => bb.id === b.id)), borrowedCount: user.borrowedBooks.length, maxBorrow: MAX_BORROW, error: 'Borrowing limit reached' });
+  }
+  if (!BOOKS.find(b => b.id === bookId)) {
+    return res.render('borrow', { books: BOOKS.filter(b => !user.borrowedBooks.some(bb => bb.id === b.id)), borrowedCount: user.borrowedBooks.length, maxBorrow: MAX_BORROW, error: 'Book not found' });
+  }
+  if (user.borrowedBooks.some(b => b.id === bookId)) {
+    return res.render('borrow', { books: BOOKS.filter(b => !user.borrowedBooks.some(bb => bb.id === b.id)), borrowedCount: user.borrowedBooks.length, maxBorrow: MAX_BORROW, error: 'Already borrowed' });
+  }
   const book = BOOKS.find(b => b.id === bookId);
+  const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  user.borrowedBooks.push({ ...book, dueDate });
+  user.history.push({ ...book, action: 'borrowed', date: new Date() });
+  res.redirect('/dashboard');
+});
+
+// Return book
+app.post('/return', requireLogin, (req, res) => {
+  const user = USERS.find(u => u.username === req.session.user);
+  const bookId = parseInt(req.body.bookId);
+  const book = user.borrowedBooks.find(b => b.id === bookId);
   if (book) {
-    req.session.borrowedBooks = req.session.borrowedBooks || [];
-    if (!req.session.borrowedBooks.some(b => b.id === bookId)) {
-      // Add dueDate property (7 days from now)
-      const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      req.session.borrowedBooks.push({ ...book, dueDate });
-      req.session.borrowed = (req.session.borrowed || 0) + 1;
-    }
+    user.borrowedBooks = user.borrowedBooks.filter(b => b.id !== bookId);
+    user.history.push({ ...book, action: 'returned', date: new Date() });
   }
   res.redirect('/dashboard');
 });
-// ...existing code...
 
-// Return book
-app.post('/return', (req, res) => {
-  if (!req.session.user) return res.redirect('/');
-  const bookId = parseInt(req.body.bookId);
-  req.session.borrowedBooks = req.session.borrowedBooks || [];
-  req.session.borrowedBooks = req.session.borrowedBooks.filter(b => b.id !== bookId);
-  req.session.borrowed = Math.max((req.session.borrowed || 1) - 1, 0);
-  res.redirect('/dashboard');
+// Borrowing history
+app.get('/history', requireLogin, (req, res) => {
+  const user = USERS.find(u => u.username === req.session.user);
+  res.render('history', { history: user.history });
 });
 
-// Start server
+// --- SERVER START ---
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

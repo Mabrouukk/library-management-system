@@ -2,7 +2,7 @@
 <html>
 <head>
   <link rel="stylesheet" href="/css/style.css">
-  <title>Dashboard</title>
+  <title>Borrowing History</title>
 </head>
 <body>
   <nav class="navbar">
@@ -16,20 +16,15 @@
     </ul>
   </nav>
   <div class="container">
-    <h2>Welcome, <%= username %>!</h2>
-    <p>You have borrowed <span class="badge"><%= booksBorrowed %></span> book(s).</p>
-    <h3>Your Borrowed Books</h3>
+    <h2>Your Borrowing History</h2>
     <ul>
-      <% borrowedBooks.forEach(book => { %>
+      <% history.forEach(item => { %>
         <li>
-          <b><%= book.title %></b> (Due: <%= new Date(book.dueDate).toDateString() %>)
-          <form method="POST" action="/return" style="display:inline">
-            <input type="hidden" name="bookId" value="<%= book.id %>">
-            <button>Return</button>
-          </form>
+          <%= item.action %> <b><%= item.title %></b> on <%= new Date(item.date).toLocaleString() %>
         </li>
       <% }) %>
     </ul>
+    <a href="/dashboard">Back</a>
   </div>
 </body>
 </html>

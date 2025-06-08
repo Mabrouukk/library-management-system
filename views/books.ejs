@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/css/style.css">
+  <title>Books</title>
+
+</head>
+<body>
+  <h2>Book Inventory</h2>
+  <form>
+    <input name="q" value="<%= q %>" placeholder="Search title">
+    <select name="genre"><option value="">All Genres</option>
+      <% genres.forEach(g => { %>
+        <option value="<%= g %>" <%= genre === g ? 'selected' : '' %>><%= g %></option>
+      <% }) %>
+    </select>
+    <select name="author"><option value="">All Authors</option>
+      <% authors.forEach(a => { %>
+        <option value="<%= a %>" <%= author === a ? 'selected' : '' %>><%= a %></option>
+      <% }) %>
+    </select>
+    <button>Filter</button>
+  </form>
+  <% if (isAdmin) { %>
+    <a href="/books/add">Add Book</a>
+  <% } %>
+  <ul>
+    <% books.forEach(book => { %>
+      <li>
+        <b><%= book.title %></b> by <%= book.author %> (<%= book.genre %>)
+        <% if (isAdmin) { %>
+          <a href="/books/edit/<%= book.id %>">Edit</a>
+          <form method="POST" action="/books/delete/<%= book.id %>" style="display:inline" onsubmit="return confirm('Delete book?');">
+            <button>Delete</button>
+          </form>
+        <% } %>
+      </li>
+    <% }) %>
+  </ul>
+  <a href="/dashboard">Back</a>
+</body>
+</html>
