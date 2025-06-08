@@ -24,8 +24,9 @@ let USERS = [
   { username: 'Mahmoud', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: true, history: [], borrowedBooks: [] },
   // Regular users
   { username: 'Marina', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] },
-  { username: 'Sham', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] },
-  { username: 'Adel', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] }
+  { username: 'Masa', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] },
+  { username: 'Adel', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] },
+  { username: 'Omar', password: bcrypt.hashSync('1234', SALT_ROUNDS), isAdmin: false, history: [], borrowedBooks: [] }
 ];
 
 let BOOKS = [
